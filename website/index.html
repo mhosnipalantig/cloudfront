@@ -35,6 +35,7 @@
   </svg>
 
   <a class="skip-link" href="#gallery">Skip to gallery</a>
+  <div id="progress" class="progress" aria-hidden="true"></div>
 
   <!-- Hero: full-bleed cover photo in a rounded frame -->
   <section class="hero" aria-label="GlobeFrame">
@@ -81,7 +82,7 @@
   </section>
 
   <section id="featured-section" class="featured" hidden aria-labelledby="featured-title">
-    <div class="section-head">
+    <div class="section-head" data-reveal="clip">
       <h2 id="featured-title" class="section-title">Featured <em>works</em></h2>
       <p class="muted small">Hand-picked by the curators</p>
     </div>
@@ -110,12 +111,12 @@
   </main>
 
   <section id="about" class="about" aria-labelledby="about-title">
-    <div class="section-head">
+    <div class="section-head" data-reveal="clip">
       <h2 id="about-title" class="section-title">How it <em>works</em></h2>
       <p class="muted small" id="mode-badge"></p>
     </div>
 
-    <ol class="flow" aria-label="Request path">
+    <ol class="flow" aria-label="Request path" data-reveal="up">
       <li><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg><span>Visitor</span></li>
       <li class="flow-arrow" aria-hidden="true"><svg class="icon"><use href="#i-arrow-right"/></svg></li>
       <li><svg class="icon" aria-hidden="true"><use href="#i-cloud"/></svg><span>CloudFront edge</span></li>
@@ -158,6 +159,7 @@
 
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/motion.js"></script>
   <script src="js/gallery.js"></script>
 </body>
 </html>

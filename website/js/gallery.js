@@ -1,4 +1,4 @@
-// Visitor gallery: featured photos, categories, search and photo details.
+// Visitor gallery: hero, featured photos, categories, search and photo details.
 (() => {
   const grid = document.getElementById("grid");
   const filters = document.getElementById("filters");
@@ -7,9 +7,11 @@
   const featuredSection = document.getElementById("featured-section");
   const featuredRow = document.getElementById("featured");
   const toolbar = document.querySelector(".toolbar");
+  const hero = document.querySelector(".hero");
+  const heroImg = document.getElementById("hero-img");
   const lb = document.getElementById("lightbox");
   const lbImg = document.getElementById("lb-img");
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const motion = Motion.enabled();
 
   let photos = [];
   let categories = [];
@@ -17,24 +19,46 @@
   let active = "All";
   let query = "";
 
-  // ---- scroll reveal (skipped when the visitor prefers reduced motion)
-  const revealer = "IntersectionObserver" in window ? new IntersectionObserver(entries => {
-    for (const e of entries) {
-      if (!e.isIntersecting) continue;
-      e.target.classList.add("in");
-      revealer.unobserve(e.target);
-    }
-  }, { rootMargin: "0px 0px -40px 0px" }) : null;
+  // ================================================================ hero motion
+  const wordmark = document.querySelector(".wordmark");
+  wordmark.setAttribute("aria-label", "GlobeFrame");
+  if (motion) Motion.splitChars(wordmark);
+  Motion.fontsReady().then(() => requestAnimationFrame(() => hero.classList.add("play")));
 
-  function reveal(nodes) {
-    if (!revealer || reduceMotion.matches) return;
-    nodes.forEach((n, i) => {
-      n.classList.add("reveal");
-      n.style.transitionDelay = `${Math.min(i % 8, 7) * 45}ms`;
-      revealer.observe(n);
+  Motion.progressBar(document.getElementById("progress"));
+  Motion.magnetic(document.querySelector(".cta"));
+
+  if (motion) {
+    // scroll parallax: --hp = how far the hero has scrolled out (0..1)
+    Motion.onScroll(y => {
+      const h = hero.offsetHeight || 1;
+      hero.style.setProperty("--hp", Math.min(1, Math.max(0, y / h)).toFixed(4));
     });
+    // pointer parallax on the cover photo (desktop only)
+    if (window.matchMedia("(hover: hover)").matches) {
+      hero.addEventListener("pointermove", e => {
+        const r = hero.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5;
+        const y = (e.clientY - r.top) / r.height - 0.5;
+        heroImg.style.translate = `${(-x * 18).toFixed(1)}px ${(-y * 12).toFixed(1)}px`;
+      });
+      hero.addEventListener("pointerleave", () => { heroImg.style.translate = "0 0"; });
+    }
   }
 
+  // hero cover: the first featured photo (or newest), with a small credit chip
+  function renderHero() {
+    const cover = photos.find(p => p.featured) || photos[0];
+    if (!cover) return;
+    heroImg.addEventListener("load", () => requestAnimationFrame(() => heroImg.classList.add("in")), { once: true });
+    heroImg.src = cover.url;
+    heroImg.hidden = false;
+    const credit = document.getElementById("hero-credit");
+    credit.replaceChildren(icon("pin"), document.createTextNode([cover.title, cover.location].filter(Boolean).join(" — ")));
+    credit.hidden = false;
+  }
+
+  // ================================================================ cards & lists
   function card(p, i, list, big = false) {
     const img = el("img", { src: p.url, alt: p.title, loading: big && i === 0 ? "eager" : "lazy", decoding: "async", "data-loading": "" });
     img.addEventListener("load", () => img.removeAttribute("data-loading"), { once: true });
@@ -53,7 +77,7 @@
     filters.replaceChildren(...items.map(c =>
       el("button", {
         class: c.name === active ? "chip active" : "chip", role: "tab", "aria-selected": String(c.name === active),
-        onclick: () => { active = c.name; renderFilters(); renderGrid(); },
+        onclick: () => { if (active === c.name) return; active = c.name; renderFilters(); renderGrid(true); },
       }, document.createTextNode(c.name), el("span", { class: "count", text: String(c.count) }))));
   }
 
@@ -61,36 +85,45 @@
     return el("div", { class: "empty" }, icon("image"), el("strong", { text: title }), el("span", { text }));
   }
 
-  function renderGrid() {
+  // first render: cards rise in as they scroll into view; later renders (filter/search) pop in
+  let firstGrid = true;
+  function renderGrid(changed = false) {
     grid.removeAttribute("aria-busy");
     shown = photos.filter(p => (active === "All" || p.category === active) && photoMatches(p, query));
     if (shown.length) {
       const cards = shown.map((p, i) => card(p, i, shown));
       grid.replaceChildren(...cards);
-      reveal(cards);
+      if (firstGrid || !changed) Motion.reveal(cards, "card", { max: 7 });
+      else Motion.popIn(cards);
+      firstGrid = false;
       statusEl.textContent = query ? `${shown.length} photo${shown.length > 1 ? "s" : ""} found` : "";
       return;
     }
     statusEl.textContent = "";
-    if (!photos.length) grid.replaceChildren(empty("No photos yet", "The administrator can upload photos from the Admin page."));
-    else if (query) grid.replaceChildren(empty("No matches", `No photos match "${query}". Try a different word or category.`));
-    else grid.replaceChildren(empty("Nothing here yet", "No photos in this category yet."));
+    let box;
+    if (!photos.length) box = empty("No photos yet", "The administrator can upload photos from the Admin page.");
+    else if (query) box = empty("No matches", `No photos match "${query}". Try a different word or category.`);
+    else box = empty("Nothing here yet", "No photos in this category yet.");
+    grid.replaceChildren(box);
+    Motion.popIn([box]);
   }
 
   function renderFeatured() {
     const feat = photos.filter(p => p.featured).slice(0, 5);
     featuredSection.hidden = feat.length === 0;
-    featuredRow.replaceChildren(...feat.map((p, i) => card(p, i, feat, true)));
+    const cards = feat.map((p, i) => card(p, i, feat, true));
+    featuredRow.replaceChildren(...cards);
+    Motion.reveal(cards, "tile", { step: 1.5 });
   }
 
   let timer;
   searchEl.addEventListener("input", () => {
     clearTimeout(timer);
-    timer = setTimeout(() => { query = searchEl.value.trim(); renderGrid(); }, 150);
+    timer = setTimeout(() => { query = searchEl.value.trim(); renderGrid(true); }, 180);
   });
 
   // toolbar gets a bottom border once it sticks to the top of the viewport
-  if (revealer) {
+  if ("IntersectionObserver" in window) {
     const sentinel = el("div", { "aria-hidden": "true" });
     toolbar.before(sentinel);
     const top = parseFloat(getComputedStyle(toolbar).top) || 0;
@@ -98,50 +131,94 @@
       { rootMargin: `-${top}px 0px 0px 0px` }).observe(sentinel);
   }
 
-  // ---- hero cover: the first featured photo (or newest), with a small credit chip
-  function renderHero() {
-    const cover = photos.find(p => p.featured) || photos[0];
-    if (!cover) return;
-    const img = document.getElementById("hero-img");
-    img.addEventListener("load", () => requestAnimationFrame(() => img.classList.add("in")), { once: true });
-    img.src = cover.url;
-    img.hidden = false;
-    const credit = document.getElementById("hero-credit");
-    credit.replaceChildren(icon("pin"), document.createTextNode(
-      [cover.title, cover.location].filter(Boolean).join(" — ")));
-    credit.hidden = false;
+  // section reveals declared in the HTML, plus the "How it works" cards
+  Motion.reveal(document.querySelectorAll(".about-grid article"), "up");
+  Motion.reveal([toolbar.querySelector(".section-title")], "clip");
+  Motion.observe();
+
+  // ================================================================ lightbox
+  let lbList = [], current = -1, opener = null;
+
+  // Run fn when an animation ends, or after `ms` at the latest: the UI must never wait
+  // on an animation that a throttled tab is slow to finish.
+  function after(anim, ms, fn) {
+    let done = false;
+    const once = () => { if (!done) { done = true; fn(); } };
+    if (anim) anim.finished.then(once, once);
+    setTimeout(once, ms);
   }
 
-  // ---- photo details (lightbox)
-  let lbList = [], current = -1, opener = null;
-  function open(i, list, from) {
+  // Animate the lightbox image from (or back to) the card's on-screen rectangle.
+  function flip(fromEl, reverse = false) {
+    const card = fromEl && fromEl.querySelector("img");
+    if (!motion || !card || !lbImg.animate) return null;
+    const a = card.getBoundingClientRect(), b = lbImg.getBoundingClientRect();
+    if (!a.width || !b.width || a.bottom < 0 || a.top > innerHeight) return null;
+    const dx = a.left + a.width / 2 - (b.left + b.width / 2);
+    const dy = a.top + a.height / 2 - (b.top + b.height / 2);
+    const s = Math.max(a.width / b.width, a.height / b.height);
+    const frames = [{ transform: `translate(${dx}px, ${dy}px) scale(${s})`, opacity: 0.6 }, { transform: "none", opacity: 1 }];
+    return lbImg.animate(reverse ? frames.reverse() : frames,
+      { duration: reverse ? 380 : 560, easing: Motion.EASE, fill: reverse ? "forwards" : "none" });
+  }
+
+  function fillCaption(p) {
+    const date = new Date(p.uploaded_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+    document.getElementById("lb-title").textContent = p.title;
+    document.getElementById("lb-meta").replaceChildren(
+      ...[meta("pin", p.location), meta("tag", p.category), meta("calendar", date)].filter(Boolean));
+    document.getElementById("lb-desc").textContent = p.description || "";
+    document.getElementById("lb-count").textContent = lbList.length > 1 ? `${current + 1} / ${lbList.length}` : "";
+    lb.querySelectorAll(".lb-nav").forEach(b => { b.hidden = lbList.length < 2; });
+  }
+
+  async function open(i, list, from) {
     lbList = list; current = i; opener = from || null;
-    show(false);
+    const p = lbList[current];
+    lbImg.src = p.url; lbImg.alt = p.title;
+    fillCaption(p);
     lb.hidden = false; document.body.classList.add("no-scroll");
     lb.querySelector(".lb-close").focus();
+    try { await lbImg.decode(); } catch (_) { /* show anyway */ }
+    flip(opener);
   }
-  function show(animate = true) {
+
+  function step(d) {
+    current = (current + d + lbList.length) % lbList.length;
     const p = lbList[current];
-    const apply = () => {
-      lbImg.src = p.url; lbImg.alt = p.title;
-      document.getElementById("lb-title").textContent = p.title;
-      const date = new Date(p.uploaded_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
-      document.getElementById("lb-meta").replaceChildren(
-        ...[meta("pin", p.location), meta("tag", p.category), meta("calendar", date)].filter(Boolean));
-      document.getElementById("lb-desc").textContent = p.description || "";
-      document.getElementById("lb-count").textContent = lbList.length > 1 ? `${current + 1} / ${lbList.length}` : "";
-      lb.querySelectorAll(".lb-nav").forEach(b => { b.hidden = lbList.length < 2; });
-      lbImg.classList.remove("swap");
-    };
-    if (!animate || reduceMotion.matches) return apply();
-    lbImg.classList.add("swap");
-    setTimeout(apply, 150);
+    if (!motion) { lbImg.src = p.url; lbImg.alt = p.title; fillCaption(p); return; }
+    const out = lbImg.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: `translateX(${-d * 40}px)` }],
+      { duration: 180, easing: "ease-in", fill: "forwards" });
+    after(out, 220, async () => {
+      lbImg.src = p.url; lbImg.alt = p.title; fillCaption(p);
+      try { await lbImg.decode(); } catch (_) { /* ignore */ }
+      out.cancel();
+      lbImg.animate([{ opacity: 0, transform: `translateX(${d * 40}px)` }, { opacity: 1, transform: "none" }],
+        { duration: 420, easing: Motion.EASE });
+      lb.querySelectorAll("figcaption > *").forEach((n, k) =>
+        n.animate([{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }],
+          { duration: 500, delay: 60 + k * 50, easing: Motion.EASE, fill: "backwards" }));
+    });
   }
+
   function close() {
-    lb.hidden = true; document.body.classList.remove("no-scroll");
-    if (opener && document.contains(opener)) opener.focus();
+    // the card for the photo now showing (may differ from the opener after next/prev)
+    const box = opener && opener.parentElement;
+    const target = box && document.contains(box) && box.children.length === lbList.length ? box.children[current] : null;
+    const done = () => {
+      lb.hidden = true; document.body.classList.remove("no-scroll");
+      lbImg.getAnimations().forEach(a => a.cancel());
+      const back = target || opener;
+      if (back && document.contains(back)) back.focus({ preventScroll: true });
+    };
+    const anim = target ? flip(target, true) : null;
+    if (anim) {
+      lb.animate([{ backgroundColor: "rgba(6,11,20,0.96)" }, { backgroundColor: "rgba(6,11,20,0)" }], { duration: 380, easing: Motion.EASE });
+      after(anim, 420, done);
+    } else if (motion && lb.animate) {
+      after(lb.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: "ease-in" }), 240, done);
+    } else done();
   }
-  function step(d) { current = (current + d + lbList.length) % lbList.length; show(); }
 
   lb.querySelector(".lb-close").addEventListener("click", close);
   lb.querySelector(".lb-prev").addEventListener("click", () => step(-1));
@@ -170,13 +247,13 @@
     touchX = null;
   });
 
-  // ---- load
+  // ================================================================ load
   async function load() {
     try {
       const [p, c] = await Promise.all([API.photos(), API.categories()]);
       photos = p.photos; categories = c.categories;
-      document.getElementById("hs-photos").textContent = photos.length;
-      document.getElementById("hs-cats").textContent = categories.filter(x => x.count > 0).length;
+      Motion.countUp(document.getElementById("hs-photos"), photos.length, { delay: 600 });
+      Motion.countUp(document.getElementById("hs-cats"), categories.filter(x => x.count > 0).length, { delay: 700 });
       renderHero(); renderFilters(); renderGrid(); renderFeatured();
     } catch (e) {
       grid.removeAttribute("aria-busy");

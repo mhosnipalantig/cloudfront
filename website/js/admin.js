@@ -12,7 +12,12 @@
   const WHERE = { local: "EC2 instance (/var/www/html/photos)", s3: "Amazon S3", cloudfront: "Amazon S3, delivered by CloudFront" };
 
   function showLogin() { loginView.hidden = false; dashView.hidden = true; logoutBtn.hidden = true; dashNav.hidden = true; }
-  function showDash() { loginView.hidden = true; dashView.hidden = false; logoutBtn.hidden = false; dashNav.hidden = false; refresh(); }
+  function showDash() {
+    loginView.hidden = true; dashView.hidden = false; logoutBtn.hidden = false; dashNav.hidden = false;
+    Motion.reveal(dashView.querySelectorAll(".panel"), "up");
+    refresh();
+  }
+  let firstStats = true;   // count-up / bar-grow only on the first load, not after every edit
 
   // Status messages: kind is "ok", "err" or "" (neutral).
   function say(target, text, kind = "") {
@@ -61,9 +66,10 @@
 
   // ---- dashboard
   function renderStats(s) {
-    $("st-photos").textContent = s.total_photos;
-    $("st-cats").textContent = s.total_categories;
-    $("st-feat").textContent = s.featured_photos;
+    const animate = firstStats && Motion.enabled();
+    [["st-photos", s.total_photos], ["st-cats", s.total_categories], ["st-feat", s.featured_photos]].forEach(([id, v], k) => {
+      if (animate) Motion.countUp($(id), v, { delay: 200 + k * 120 }); else $(id).textContent = v;
+    });
     const mb = s.storage_bytes / (1024 * 1024);
     $("st-size").textContent = mb >= 1 ? `${mb.toFixed(1)} MB` : `${Math.round(s.storage_bytes / 1024)} KB`;
     $("st-latest").textContent = s.latest_upload
@@ -72,10 +78,18 @@
     $("st-where").textContent = WHERE[s.image_mode] + (s.bucket ? ` – ${s.bucket}` : "");
     $("mode").textContent = MODE[s.image_mode];
     const max = Math.max(1, ...s.per_category.map(c => c.count));
+    const width = c => `width:${animate ? 0 : (c.count / max) * 100}%`;
     $("st-bars").replaceChildren(...s.per_category.map(c => el("div", { class: "bar-row" },
       el("span", { class: "bar-label", text: c.name, title: c.name }),
-      el("span", { class: "bar-track" }, el("span", { class: "bar-fill", style: `width:${(c.count / max) * 100}%` })),
+      el("span", { class: "bar-track" }, el("span", { class: "bar-fill", style: width(c), "data-w": (c.count / max) * 100 })),
       el("span", { class: "bar-num", text: String(c.count) }))));
+    if (animate) {   // grow bars from zero, one after another
+      setTimeout(() => $("st-bars").querySelectorAll(".bar-fill").forEach((b, k) => {
+        b.style.transitionDelay = `${k * 70}ms`;
+        b.style.width = `${b.dataset.w}%`;
+      }), 250);
+    }
+    firstStats = false;
   }
 
   function renderCategorySelects() {
@@ -138,7 +152,7 @@
     if (file && file.size > 10 * 1024 * 1024) { say(msg, "File is larger than 10 MB.", "err"); return; }
     const data = new FormData(f);
     data.set("featured", f.featured.checked ? "true" : "false");
-    btn.disabled = true; say(msg, "Uploading…");
+    btn.disabled = true; btn.classList.add("loading"); say(msg, "Uploading…");
     try {
       await API.upload(data);
       const cat = f.category.value;
@@ -146,7 +160,7 @@
       say(msg, "Photo uploaded.", "ok");
       refresh();
     } catch (err) { fail(err, msg); }
-    finally { btn.disabled = false; }
+    finally { btn.disabled = false; btn.classList.remove("loading"); }
   });
 
   async function toggleFeature(p) {
