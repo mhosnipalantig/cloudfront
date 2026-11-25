@@ -89,13 +89,27 @@
     timer = setTimeout(() => { query = searchEl.value.trim(); renderGrid(); }, 150);
   });
 
-  // toolbar gets a bottom border once it sticks under the header
+  // toolbar gets a bottom border once it sticks to the top of the viewport
   if (revealer) {
     const sentinel = el("div", { "aria-hidden": "true" });
     toolbar.before(sentinel);
-    new IntersectionObserver(([e]) => toolbar.classList.toggle("stuck", !e.isIntersecting),
-      { rootMargin: `-${parseInt(getComputedStyle(document.documentElement).getPropertyValue("--header-h")) || 64}px 0px 0px 0px` })
-      .observe(sentinel);
+    const top = parseFloat(getComputedStyle(toolbar).top) || 0;
+    new IntersectionObserver(([e]) => toolbar.classList.toggle("stuck", !e.isIntersecting && e.boundingClientRect.top < 1),
+      { rootMargin: `-${top}px 0px 0px 0px` }).observe(sentinel);
+  }
+
+  // ---- hero cover: the first featured photo (or newest), with a small credit chip
+  function renderHero() {
+    const cover = photos.find(p => p.featured) || photos[0];
+    if (!cover) return;
+    const img = document.getElementById("hero-img");
+    img.addEventListener("load", () => requestAnimationFrame(() => img.classList.add("in")), { once: true });
+    img.src = cover.url;
+    img.hidden = false;
+    const credit = document.getElementById("hero-credit");
+    credit.replaceChildren(icon("pin"), document.createTextNode(
+      [cover.title, cover.location].filter(Boolean).join(" — ")));
+    credit.hidden = false;
   }
 
   // ---- photo details (lightbox)
@@ -163,7 +177,7 @@
       photos = p.photos; categories = c.categories;
       document.getElementById("hs-photos").textContent = photos.length;
       document.getElementById("hs-cats").textContent = categories.filter(x => x.count > 0).length;
-      renderFilters(); renderGrid(); renderFeatured();
+      renderHero(); renderFilters(); renderGrid(); renderFeatured();
     } catch (e) {
       grid.removeAttribute("aria-busy");
       grid.replaceChildren(empty("Could not load photos", e.message));

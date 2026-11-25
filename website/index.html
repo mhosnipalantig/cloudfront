@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GlobeFrame – Global Photo Gallery</title>
   <meta name="description" content="GlobeFrame: a global photo gallery and portfolio website hosted on AWS.">
-  <meta name="theme-color" content="#0a0a0a">
+  <meta name="theme-color" content="#0a1220">
   <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="home">
   <!-- SVG icon sprite (Lucide-style, stroke icons) -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
@@ -31,37 +31,58 @@
     <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/></symbol>
     <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
     <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+    <symbol id="i-arrow-up-right" viewBox="0 0 24 24"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></symbol>
   </svg>
 
   <a class="skip-link" href="#gallery">Skip to gallery</a>
 
-  <header class="site-header">
-    <a class="brand" href="index.html">
-      <svg class="icon brand-mark" aria-hidden="true"><use href="#i-globe"/></svg>
-      <span>GlobeFrame</span>
-    </a>
-    <nav aria-label="Main">
-      <a href="#gallery">Gallery</a>
-      <a href="#about">About</a>
-      <a href="admin.html" class="nav-admin">Admin</a>
-    </nav>
-  </header>
+  <!-- Hero: full-bleed cover photo in a rounded frame -->
+  <section class="hero" aria-label="GlobeFrame">
+    <div class="hero-bg" aria-hidden="true"><img id="hero-img" alt="" hidden></div>
+    <div class="hero-scrim" aria-hidden="true"></div>
 
-  <section class="hero">
-    <p class="eyebrow">Global Photo Gallery &amp; Portfolio</p>
-    <h1>Moments from around the world, <span class="dim">delivered close to you.</span></h1>
-    <p class="lede">GlobeFrame showcases photographs and creative works from photographers, artists and students.
-      Browse by category or search by title, location or category.</p>
-    <dl class="hero-stats" aria-live="polite">
-      <div><dt>Photos</dt><dd id="hs-photos">–</dd></div>
-      <div><dt>Categories</dt><dd id="hs-cats">–</dd></div>
-      <div><dt>Region</dt><dd id="hs-region">Tokyo</dd></div>
-    </dl>
+    <div class="hero-inner">
+      <header class="topbar">
+        <a class="brand" href="index.html">
+          <svg class="icon brand-mark" aria-hidden="true"><use href="#i-globe"/></svg>
+          <span>GlobeFrame</span>
+        </a>
+        <nav class="topnav" aria-label="Main">
+          <a href="#featured-section">Featured</a>
+          <a href="#gallery">Gallery</a>
+          <a href="#about">How it works</a>
+        </nav>
+        <a href="admin.html" class="nav-admin">Admin</a>
+      </header>
+
+      <p id="hero-credit" class="hero-credit" hidden></p>
+
+      <div class="stage">
+        <div class="stage-left">
+          <dl class="hero-stats" aria-live="polite">
+            <div><dt>Photos</dt><dd id="hs-photos">–</dd></div>
+            <div><dt>Categories</dt><dd id="hs-cats">–</dd></div>
+            <div><dt>Region</dt><dd id="hs-region">Tokyo</dd></div>
+          </dl>
+          <h1 class="wordmark">GlobeFrame<sup aria-hidden="true">*</sup></h1>
+        </div>
+
+        <div class="descriptor">
+          <p>GlobeFrame is a global gallery of photographs and creative works from photographers, artists and
+            students — moments from every corner of the world, browsable by category, place or title.</p>
+          <a class="cta" href="#gallery">
+            Explore the gallery
+            <span class="cta-icon" aria-hidden="true"><svg class="icon"><use href="#i-arrow-up-right"/></svg></span>
+          </a>
+          <p class="footnote">* Delivered from the edge by Amazon CloudFront</p>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section id="featured-section" class="featured" hidden aria-labelledby="featured-title">
     <div class="section-head">
-      <h2 id="featured-title" class="section-title">Featured</h2>
+      <h2 id="featured-title" class="section-title">Featured <em>works</em></h2>
       <p class="muted small">Hand-picked by the curators</p>
     </div>
     <div id="featured" class="featured-row"></div>
@@ -70,7 +91,7 @@
   <main id="gallery" class="gallery-section" tabindex="-1">
     <div class="toolbar">
       <div class="toolbar-inner">
-        <h2 class="section-title">Gallery</h2>
+        <h2 class="section-title">The <em>gallery</em></h2>
         <label class="search">
           <span class="visually-hidden">Search photos</span>
           <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
@@ -90,7 +111,7 @@
 
   <section id="about" class="about" aria-labelledby="about-title">
     <div class="section-head">
-      <h2 id="about-title" class="section-title">How it works</h2>
+      <h2 id="about-title" class="section-title">How it <em>works</em></h2>
       <p class="muted small" id="mode-badge"></p>
     </div>
 
