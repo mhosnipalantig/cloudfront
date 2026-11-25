@@ -1,0 +1,20 @@
+[Unit]
+Description=GlobeFrame backend (Flask API)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=globeframe
+Group=globeframe
+WorkingDirectory=/opt/globeframe/backend
+EnvironmentFile=/etc/globeframe.env
+# One process with several threads, so the photo list file is updated safely.
+ExecStart=/opt/globeframe/venv/bin/gunicorn --workers 1 --threads 4 --bind 127.0.0.1:5000 --access-logfile - app:app
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

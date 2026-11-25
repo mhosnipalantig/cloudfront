@@ -1,0 +1,18 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "LetEC2MemberAttachGlobeFrameRole",
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "arn:aws:iam::796125232450:role/GlobeFrame-EC2-S3-Role",
+      "Condition": { "StringEquals": { "iam:PassedToService": "ec2.amazonaws.com" } }
+    },
+    {
+      "Sid": "ListProfilesForConsoleDropdown",
+      "Effect": "Allow",
+      "Action": ["iam:ListInstanceProfiles", "iam:ListRoles"],
+      "Resource": "*"
+    }
+  ]
+}

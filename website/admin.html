@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GlobeFrame – Admin</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="admin">
+  <header class="site-header">
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">◎</span> GlobeFrame <span class="tag">Admin</span></a>
+    <nav>
+      <a href="index.html">View gallery</a>
+      <button id="logout" class="btn btn-ghost" hidden>Log out</button>
+    </nav>
+  </header>
+
+  <!-- Login -->
+  <section id="login-view" class="panel narrow" hidden>
+    <h1>Administrator login</h1>
+    <p class="muted">Sign in to upload and manage gallery photos.</p>
+    <form id="login-form" class="form">
+      <label>Username <input name="username" autocomplete="username" required></label>
+      <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
+      <button class="btn" type="submit">Log in</button>
+      <p id="login-error" class="error" role="alert"></p>
+    </form>
+  </section>
+
+  <!-- Dashboard -->
+  <main id="dash-view" hidden>
+    <section class="panel">
+      <h1>Upload a photo</h1>
+      <form id="upload-form" class="form form-grid">
+        <label class="span-2">Image file (JPG, PNG, GIF, WEBP – max 10 MB)
+          <input name="file" type="file" accept="image/jpeg,image/png,image/gif,image/webp" required>
+        </label>
+        <label>Title <input name="title" maxlength="120" placeholder="e.g. Sunrise over Mount Fuji"></label>
+        <label>Collection
+          <input name="collection" list="collection-list" maxlength="60" placeholder="e.g. Landscapes" required>
+          <datalist id="collection-list"></datalist>
+        </label>
+        <label class="span-2">Description <textarea name="description" rows="2" maxlength="1000" placeholder="Where and when was it taken?"></textarea></label>
+        <label class="check"><input name="featured" type="checkbox"> Feature this photo on the home page</label>
+        <div class="actions"><button class="btn" type="submit">Upload</button> <span id="upload-msg" class="muted" role="status"></span></div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h1>Manage photos <span id="count" class="muted"></span></h1>
+        <span id="mode" class="tag"></span>
+      </div>
+      <div id="admin-status" class="status"></div>
+      <div id="admin-list" class="admin-list"></div>
+    </section>
+  </main>
+
+  <!-- Edit dialog -->
+  <dialog id="edit-dialog">
+    <form id="edit-form" class="form" method="dialog">
+      <h2>Edit photo</h2>
+      <label>Title <input name="title" maxlength="120" required></label>
+      <label>Collection <input name="collection" list="collection-list" maxlength="60" required></label>
+      <label>Description <textarea name="description" rows="3" maxlength="1000"></textarea></label>
+      <label class="check"><input name="featured" type="checkbox"> Featured</label>
+      <div class="actions">
+        <button class="btn" value="save">Save changes</button>
+        <button class="btn btn-ghost" value="cancel" formnovalidate>Cancel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

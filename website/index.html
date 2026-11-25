@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GlobeFrame – Global Photo Gallery</title>
+  <meta name="description" content="GlobeFrame: a global photo gallery and portfolio website hosted on AWS.">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">◎</span> GlobeFrame</a>
+    <nav>
+      <a href="#gallery">Gallery</a>
+      <a href="#about">About</a>
+      <a href="admin.html" class="nav-admin">Admin</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <p class="eyebrow">Global Photo Gallery &amp; Portfolio</p>
+    <h1>Moments from around the world,<br>delivered close to you.</h1>
+    <p class="lede">Browse photographs and creative works by collection. Images are stored in the cloud and delivered from the AWS Tokyo Region.</p>
+  </section>
+
+  <section id="featured-section" class="featured" hidden>
+    <h2 class="section-title">Featured</h2>
+    <div id="featured" class="featured-row"></div>
+  </section>
+
+  <main id="gallery" class="gallery-section">
+    <div class="gallery-head">
+      <h2 class="section-title">Gallery</h2>
+      <div id="filters" class="filters" role="tablist" aria-label="Collections"></div>
+    </div>
+    <div id="status" class="status">Loading photos…</div>
+    <div id="grid" class="grid"></div>
+  </main>
+
+  <section id="about" class="about">
+    <h2 class="section-title">About this project</h2>
+    <div class="about-grid">
+      <div><h3>Amazon EC2</h3><p>Runs the web server (Apache) and the admin backend.</p></div>
+      <div><h3>Amazon S3</h3><p>Stores the photographs and website assets.</p></div>
+      <div><h3>Amazon CloudFront</h3><p>Delivers images from edge locations closer to visitors.</p></div>
+      <div><h3>AWS IAM</h3><p>Controls who and what can access each resource.</p></div>
+    </div>
+    <p class="muted small">ITE183 – From Concepts to Cloud: An AWS Application Project · Cloud Data Center / CDN · <span id="mode-badge"></span></p>
+  </section>
+
+  <footer class="site-footer">© 2026 GlobeFrame · Macatanong · Maguidala · Palantig</footer>
+
+  <div id="lightbox" class="lightbox" hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
+    <button class="lb-close" aria-label="Close">×</button>
+    <button class="lb-nav lb-prev" aria-label="Previous photo">‹</button>
+    <figure>
+      <img id="lb-img" alt="">
+      <figcaption>
+        <h3 id="lb-title"></h3>
+        <p id="lb-meta" class="muted"></p>
+        <p id="lb-desc"></p>
+      </figcaption>
+    </figure>
+    <button class="lb-nav lb-next" aria-label="Next photo">›</button>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/gallery.js"></script>
+</body>
+</html>
