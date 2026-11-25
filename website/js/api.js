@@ -26,16 +26,21 @@ const API = (() => {
     return data;
   }
 
+  const enc = encodeURIComponent;
   return {
     health: () => request("/health"),
     photos: () => request("/photos"),
-    collections: () => request("/collections"),
+    categories: () => request("/categories"),
+    stats: () => request("/stats"),
     me: () => request("/me"),
     login: (username, password) => request("/login", { method: "POST", json: { username, password } }),
     logout: () => request("/logout", { method: "POST" }),
     upload: (formData) => request("/photos", { method: "POST", form: formData }),
-    update: (id, fields) => request(`/photos/${encodeURIComponent(id)}`, { method: "PATCH", json: fields }),
-    remove: (id) => request(`/photos/${encodeURIComponent(id)}`, { method: "DELETE" }),
+    update: (id, fields) => request(`/photos/${enc(id)}`, { method: "PATCH", json: fields }),
+    remove: (id) => request(`/photos/${enc(id)}`, { method: "DELETE" }),
+    addCategory: (name) => request("/categories", { method: "POST", json: { name } }),
+    renameCategory: (name, newName) => request(`/categories/${enc(name)}`, { method: "PATCH", json: { name: newName } }),
+    deleteCategory: (name) => request(`/categories/${enc(name)}`, { method: "DELETE" }),
   };
 })();
 
@@ -50,4 +55,11 @@ function el(tag, attrs = {}, ...children) {
   }
   for (const c of children) if (c != null) node.append(c);
   return node;
+}
+
+// Case-insensitive search across title, location, category and description.
+function photoMatches(p, q) {
+  if (!q) return true;
+  q = q.toLowerCase();
+  return [p.title, p.location, p.category, p.description].some(v => (v || "").toLowerCase().includes(q));
 }

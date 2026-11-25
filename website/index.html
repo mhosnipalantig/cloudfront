@@ -21,7 +21,9 @@
   <section class="hero">
     <p class="eyebrow">Global Photo Gallery &amp; Portfolio</p>
     <h1>Moments from around the world,<br>delivered close to you.</h1>
-    <p class="lede">Browse photographs and creative works by collection. Images are stored in the cloud and delivered from the AWS Tokyo Region.</p>
+    <p class="lede">GlobeFrame showcases photographs and creative works from photographers, artists and students.
+      Browse by category or search by title, location or category. Images are stored in the AWS cloud and delivered
+      from the Tokyo Region.</p>
   </section>
 
   <section id="featured-section" class="featured" hidden>
@@ -32,18 +34,22 @@
   <main id="gallery" class="gallery-section">
     <div class="gallery-head">
       <h2 class="section-title">Gallery</h2>
-      <div id="filters" class="filters" role="tablist" aria-label="Collections"></div>
+      <label class="search">
+        <span class="visually-hidden">Search photos</span>
+        <input id="search" type="search" placeholder="Search by title, location or category…" autocomplete="off">
+      </label>
     </div>
-    <div id="status" class="status">Loading photos…</div>
+    <div id="filters" class="filters" role="tablist" aria-label="Categories"></div>
+    <div id="status" class="status" role="status">Loading photos…</div>
     <div id="grid" class="grid"></div>
   </main>
 
   <section id="about" class="about">
     <h2 class="section-title">About this project</h2>
     <div class="about-grid">
+      <div><h3>Amazon CloudFront</h3><p>Delivers the website and images from edge locations closer to visitors.</p></div>
       <div><h3>Amazon EC2</h3><p>Runs the web server (Apache) and the admin backend.</p></div>
-      <div><h3>Amazon S3</h3><p>Stores the photographs and website assets.</p></div>
-      <div><h3>Amazon CloudFront</h3><p>Delivers images from edge locations closer to visitors.</p></div>
+      <div><h3>Amazon S3</h3><p>Stores the photographs in a private bucket.</p></div>
       <div><h3>AWS IAM</h3><p>Controls who and what can access each resource.</p></div>
     </div>
     <p class="muted small">ITE183 – From Concepts to Cloud: An AWS Application Project · Cloud Data Center / CDN · <span id="mode-badge"></span></p>
@@ -51,7 +57,7 @@
 
   <footer class="site-footer">© 2026 GlobeFrame · Macatanong · Maguidala · Palantig</footer>
 
-  <div id="lightbox" class="lightbox" hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
+  <div id="lightbox" class="lightbox" hidden role="dialog" aria-modal="true" aria-label="Photo details">
     <button class="lb-close" aria-label="Close">×</button>
     <button class="lb-nav lb-prev" aria-label="Previous photo">‹</button>
     <figure>

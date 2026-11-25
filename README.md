@@ -4,71 +4,105 @@ ITE183 – From Concepts to Cloud: An AWS Application Project
 Topic: Cloud Data Center / CDN · Region: Asia Pacific (Tokyo) – ap-northeast-1
 Group: Macatanong, Abdensa C. · Maguidala, Mohammad Yasser M. · Palantig, Mohammad Hosni U.
 
-GlobeFrame lets **visitors** browse photographs by collection and view them in a
-full-screen viewer, while an **administrator** logs in to upload, edit, feature and
-remove photos.
+---
+
+## 1. Features
+
+### A. Visitor features
+| Feature | Description |
+|---|---|
+| Homepage | Featured photographs and an introduction to GlobeFrame. |
+| Photo Gallery | All uploaded photographs in a gallery grid (featured first, then newest). |
+| Categories | Browse photos by category, such as Nature, Architecture, Culture and Landscapes. |
+| Search | Search photographs by title, location or category (description is searched too). |
+| Photo Details | A larger photo with its title, description, location, category and date. Arrow keys move between photos. |
+| Responsive Design | Works on computers, tablets and phones. |
+
+### B. Administrator features
+| Feature | Description |
+|---|---|
+| Admin Login | Secure access to the dashboard (hashed password, login attempt limit). |
+| Dashboard | Total photos, categories, featured photos, storage used, photos per category and latest upload. |
+| Upload Photos | Upload new photographs with title, location, category and description. Stored in S3 once the IAM role is attached (see section 6). |
+| Manage Photos | Edit titles, descriptions, locations and categories; feature or unfeature photos; search the list. |
+| Delete Photos | Remove photographs from the gallery and from storage (S3 or EC2). |
+| Manage Categories | Create, rename and delete categories. Photos in a deleted category move to "Uncategorized". |
+
+### Visitor workflow
+1. Visitor opens the GlobeFrame website.
+2. CloudFront receives the request.
+3. EC2 serves the website and application.
+4. Visitor browses categories or searches for photos.
+5. CloudFront retrieves the requested images from the private S3 bucket.
+6. Visitor views the photographs.
+
+### Administrator workflow
+1. Administrator logs in.
+2. Opens the admin dashboard.
+3. Uploads a photograph and enters its information.
+4. The EC2 backend processes the upload and stores the image in S3 using its IAM role.
+5. The photo information is saved for gallery display.
+6. The new photograph becomes available in the public gallery.
 
 ---
 
-## 1. How it uses AWS
+## 2. Architecture
 
 ```
- Visitor / Admin browser
-          │  http://<EC2 public IP>
-          ▼
- ┌──────────────────────── Amazon EC2 (GlobeFrame-WebServer, Tokyo) ─────────────────────┐
- │  Apache (port 80)                                                                     │
- │   ├── serves website/  (index.html, admin.html, css, js)                              │
- │   ├── serves /photos/  (only in "local" mode)                                         │
- │   └── forwards /api/ ──► Flask backend (127.0.0.1:5000, run by Gunicorn)              │
- └───────────────────────────────────────────┬───────────────────────────────────────────┘
-                                             │ IAM role (no keys stored on the server)
-                                             ▼
-                         Amazon S3: globeframe-photos-2026/photos/
-                                             ▲
-                                             │ Origin Access Control (private bucket)
-                         Amazon CloudFront ──┘  delivers images from edge locations
+                         Visitor / Administrator browser
+                                       │ https://<distribution>.cloudfront.net
+                                       ▼
+                      ┌──────── Amazon CloudFront (edge locations) ────────┐
+                      │  Default (*)  → EC2 origin   (no caching for /api) │
+                      │  /photos/*    → S3 origin    (cached at the edge)  │
+                      └───────────┬───────────────────────────┬────────────┘
+                                  │ HTTP :80                  │ Origin Access Control
+                                  ▼                           ▼
+ ┌──────────── Amazon EC2: GlobeFrame-WebServer (Tokyo) ──┐   Amazon S3 (private)
+ │  Apache  ├── website files (index.html, admin.html…)   │   group-2-ttuu-cdn-demo-2026/photos/
+ │          └── /api/ → Flask backend (127.0.0.1:5000) ───┼──► (upload / delete through the
+ └────────────────────────────────────────────────────────┘    EC2 IAM role, no access keys)
 ```
 
 | Service | Role in GlobeFrame |
 |---|---|
-| **Amazon EC2** | Runs Apache (website) and the Flask backend (admin functions). |
-| **Amazon S3** | Stores the photos (`photos/` folder in `globeframe-photos-2026`). |
-| **Amazon CloudFront** | Delivers the photos from edge locations close to visitors. |
-| **AWS IAM** | EC2 role lets the backend use S3 without access keys; member policies limit each person's access. |
+| **Amazon CloudFront** | Receives visitor requests; serves the site from EC2 and the photos from S3 through edge locations. |
+| **Amazon EC2** | Runs Apache (website) and the Flask backend (login, dashboard, upload, edit, delete). |
+| **Amazon S3** | Stores the photographs in a private bucket. |
+| **AWS IAM** | The EC2 role lets the backend use S3 without access keys; member policies limit each person's access. |
 
-### Image modes (one setting, no code changes)
+### Storage modes (one setting, no code changes)
 
-The backend setting `IMAGE_MODE` in `/etc/globeframe.env` decides where photos live:
+Because CloudFront and the IAM role are still being set up, the app can run in
+three modes. Set `IMAGE_MODE` in `/etc/globeframe.env` on the server:
 
 | Mode | Photos stored in | Photos delivered by | Needs |
 |---|---|---|---|
 | `local` *(default)* | EC2 disk (`/var/www/html/photos`) | Apache on EC2 | Nothing extra – works now |
-| `s3` | S3 bucket | Short-lived pre-signed S3 links (bucket stays private) | IAM role attached to the instance |
-| `cloudfront` | S3 bucket | CloudFront (`https://<domain>/photos/...`) | IAM role + CloudFront distribution |
+| `s3` | Private S3 bucket | Short-lived pre-signed S3 links | IAM role attached to the instance |
+| `cloudfront` | Private S3 bucket | CloudFront | IAM role + CloudFront distribution |
 
-This lets the project work today, then move to S3 and CloudFront as those parts
-are finished.
+The About section of the homepage and the admin dashboard show which mode is active.
 
 ---
 
-## 2. Folder structure
+## 3. Folder structure
 
 ```
 cloudfrount/
 ├── website/                 Front end (served by Apache)
-│   ├── index.html           Visitor gallery
-│   ├── admin.html           Administrator dashboard
+│   ├── index.html           Visitor homepage, gallery, search, photo details
+│   ├── admin.html           Admin login and dashboard
 │   ├── css/style.css
 │   ├── js/config.js         API location
 │   ├── js/api.js            Calls to the backend
-│   ├── js/gallery.js        Gallery, filters, lightbox
-│   └── js/admin.js          Login, upload, edit, feature, remove
+│   ├── js/gallery.js        Visitor features
+│   └── js/admin.js          Administrator features
 ├── backend/
 │   ├── app.py               Flask API
 │   └── requirements.txt
 └── deploy/
-    ├── setup.sh             One-command installer for EC2
+    ├── setup.sh             One-command installer / updater for EC2
     ├── globeframe.service   Keeps the backend running (systemd)
     ├── globeframe-apache.conf
     ├── iam-role-policy.json S3 permissions for the EC2 role (for the leader)
@@ -79,79 +113,53 @@ cloudfrount/
 
 | Method | Path | Who | Purpose |
 |---|---|---|---|
-| GET | `/api/photos` | Anyone | List photos (featured first) |
-| GET | `/api/collections` | Anyone | List collections |
-| GET | `/api/health` | Anyone | Status and current image mode |
-| POST | `/api/login` / `/api/logout` | Admin | Sign in / out |
-| POST | `/api/photos` | Admin | Upload a photo (JPG, PNG, GIF, WEBP, max 10 MB) |
-| PATCH | `/api/photos/<id>` | Admin | Edit title, description, collection, featured |
-| DELETE | `/api/photos/<id>` | Admin | Remove a photo and its file |
+| GET | `/api/photos?q=&category=` | Anyone | List or search photos |
+| GET | `/api/categories` | Anyone | Categories with photo counts |
+| GET | `/api/health` | Anyone | Status and storage mode |
+| POST | `/api/login`, `/api/logout` | Admin | Sign in / out |
+| GET | `/api/stats` | Admin | Dashboard statistics |
+| POST | `/api/photos` | Admin | Upload a photo (JPG, PNG, GIF, WEBP; max 10 MB) |
+| PATCH | `/api/photos/<id>` | Admin | Edit title, location, description, category, featured |
+| DELETE | `/api/photos/<id>` | Admin | Delete a photo and its file |
+| POST | `/api/categories` | Admin | Create a category |
+| PATCH | `/api/categories/<name>` | Admin | Rename a category |
+| DELETE | `/api/categories/<name>` | Admin | Delete a category |
 
 ---
 
-## 3. Deploy to EC2 (AWS console only)
+## 4. Deploy to EC2 (AWS console only)
 
-You need: the GlobeFrame-WebServer instance running in Tokyo, with HTTP (port 80)
-open in its security group. Both are already set up.
+### Step A – Put the project on GitHub
+1. github.com → **New repository** → Public → **Create repository** (leave "Add a README" unchecked).
+2. Click **uploading an existing file**.
+3. In File Explorer, open `C:\Users\msu-wone\Documents\Codes\cloudfrount`, press **Ctrl+A**, and drag
+   everything *inside* the folder onto the page. Do not drag the `cloudfrount` folder itself.
+4. Click **Commit changes**. The repository should show `backend`, `deploy`, `website` and `README.md` at the top level.
 
-### Step A – Put the project on GitHub (on your computer)
-
-**Option 1: GitHub website, no Git needed**
-1. Sign in at github.com → **New repository** → name it `globeframe` → **Public** → **Create repository**.
-2. Click **uploading an existing file**, drag in **everything inside** the `cloudfrount` folder
-   (the `website`, `backend` and `deploy` folders, `README.md`, `.gitignore`) → **Commit changes**.
-
-**Option 2: Git command line (PowerShell)**
-```powershell
-cd C:\Users\msu-wone\Documents\Codes\cloudfrount
-git init
-git add .
-git commit -m "GlobeFrame photo gallery"
-git branch -M main
-git remote add origin https://github.com/<your-username>/globeframe.git
-git push -u origin main
-```
-
-> The repository holds no passwords or keys. The admin password is only created on
-> the server in Step B, so a public repository is fine.
-
-### Step B – Install on the server (EC2 Instance Connect)
-
-EC2 → Instances → **GlobeFrame-WebServer** → **Connect** → **EC2 Instance Connect** →
-username `ec2-user` → **Connect**. Then run:
+### Step B – Install on the server
+EC2 → Instances → **GlobeFrame-WebServer** → **Connect** → **EC2 Instance Connect** → `ec2-user` → **Connect**:
 
 ```bash
 sudo dnf install -y git
-git clone https://github.com/<your-username>/globeframe.git
-cd globeframe
+git clone https://github.com/<your-username>/<repository-name>.git
+cd <repository-name>
 sudo bash deploy/setup.sh
 ```
+Choose the admin username and password when asked. The installer ends with
+`Backend health check: OK` and prints the gallery and admin links.
 
-The installer asks you to **choose an admin username and password**. When it
-finishes it prints the links, for example:
-
-```
-GlobeFrame installed. Backend health check: OK
-  Gallery:  http://43.207.181.11/
-  Admin:    http://43.207.181.11/admin.html
-```
-
-> The installer replaces the old test page (`index.html`) with the GlobeFrame site.
-
-### Step C – Try it
-1. Open **http://&lt;public-ip&gt;/admin.html**, log in, and upload a few photos.
-2. Open **http://&lt;public-ip&gt;/** to see them in the gallery.
-
-### Updating after you change the code
-Push the changes to GitHub, then in Instance Connect:
-```bash
-cd ~/globeframe && git pull && sudo bash deploy/setup.sh
-```
-Your admin account and uploaded photos are kept.
+### Step C – Update after changing the code
+1. Upload the changed files to GitHub again: **Add file → Upload files**, drag in the files or
+   folders, and **Commit changes**. Files with the same name are replaced.
+2. In EC2 Instance Connect:
+   ```bash
+   cd ~/<repository-name> && git pull && sudo bash deploy/setup.sh
+   ```
+The admin account, uploaded photos and photo information are kept.
 
 ---
 
-## 4. Move photos to S3 (when the IAM role is ready)
+## 5. Move photos to S3 (IAM role)
 
 **Leader (IAM):**
 1. IAM → Policies → Create policy → JSON → paste `deploy/iam-role-policy.json` → name `GlobeFrame-EC2-S3-Policy`.
@@ -160,33 +168,51 @@ Your admin account and uploaded photos are kept.
 
 **Member 2 (EC2):**
 1. EC2 → select the instance → **Actions → Security → Modify IAM role** → `GlobeFrame-EC2-S3-Role` → **Update IAM role**.
-2. In Instance Connect, test the access, copy any existing photos, and switch the mode:
+2. In EC2 Instance Connect:
    ```bash
-   aws s3 ls s3://globeframe-photos-2026
-   sudo aws s3 sync /var/www/html/photos s3://globeframe-photos-2026/photos/
+   aws s3 ls s3://group-2-ttuu-cdn-demo-2026
+   sudo aws s3 sync /var/www/html/photos s3://group-2-ttuu-cdn-demo-2026/photos/
+   sudo sed -i 's/^S3_BUCKET=.*/S3_BUCKET=group-2-ttuu-cdn-demo-2026/' /etc/globeframe.env
    sudo sed -i 's/^IMAGE_MODE=.*/IMAGE_MODE=s3/' /etc/globeframe.env
    sudo systemctl restart globeframe
    ```
-3. Refresh the gallery. The About section should say *"Images served from Amazon S3"*.
+3. The dashboard should now show **Storage: Amazon S3**. New uploads go to the bucket.
 
-## 5. Deliver photos through CloudFront (when CloudFront is unblocked)
+---
 
-**Leader (CloudFront):** create the distribution with origin `globeframe-photos-2026`
-and **Origin Access Control**, and apply the bucket policy CloudFront offers. Copy the
-distribution domain name, for example `d1234abcd.cloudfront.net`.
+## 6. Put CloudFront in front (matches the visitor workflow)
+
+Do this after section 5, once the account verification issue is resolved.
+
+**Leader (CloudFront) – create one distribution with two origins:**
+
+| Setting | Value |
+|---|---|
+| Origin 1 (website) | EC2 public DNS, e.g. `ec2-43-207-181-11.ap-northeast-1.compute.amazonaws.com` · Protocol **HTTP only**, port 80 |
+| Origin 2 (photos) | S3 bucket `group-2-ttuu-cdn-demo-2026` · **Origin access control** (create new OAC) · then apply the bucket policy CloudFront offers |
+| Default behavior `*` → Origin 1 | Viewer protocol: **Redirect HTTP to HTTPS** · Allowed methods: **GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE** · Cache policy: **CachingDisabled** · Origin request policy: **AllViewer** |
+| Behavior `/photos/*` → Origin 2 | Viewer protocol: Redirect HTTP to HTTPS · Allowed methods: GET, HEAD · Cache policy: **CachingOptimized** |
+| Web Application Firewall | Do not enable security protections (the account lacks `wafv2:CreateWebACL`) |
+
+> The EC2 public DNS changes if the instance is stopped and started. Attaching an
+> Elastic IP keeps it fixed; otherwise update Origin 1 after each restart.
 
 **Member 2 (EC2):**
 ```bash
 sudo sed -i 's/^IMAGE_MODE=.*/IMAGE_MODE=cloudfront/' /etc/globeframe.env
-sudo sed -i 's/^CLOUDFRONT_DOMAIN=.*/CLOUDFRONT_DOMAIN=d1234abcd.cloudfront.net/' /etc/globeframe.env
+echo "COOKIE_SECURE=1" | sudo tee -a /etc/globeframe.env
 sudo systemctl restart globeframe
 ```
-The photo links now point to CloudFront edge locations. The About section should say
-*"Images delivered by Amazon CloudFront"*.
+Then open the site at **https://&lt;distribution&gt;.cloudfront.net** and use that address from
+now on, including for `/admin.html`. With `COOKIE_SECURE=1`, admin login works only over HTTPS.
+Photo links become `/photos/...` on the CloudFront domain and are served from S3 through the edge.
+
+*Alternative:* to keep opening the site on EC2 but deliver only the photos through CloudFront,
+create just Origin 2 and set `CLOUDFRONT_DOMAIN=<distribution>.cloudfront.net` instead (skip `COOKIE_SECURE`).
 
 ---
 
-## 6. Run it on your own computer (optional)
+## 7. Run it on your own computer (optional)
 
 ```powershell
 cd C:\Users\msu-wone\Documents\Codes\cloudfrount\backend
@@ -201,20 +227,21 @@ Open http://127.0.0.1:5000 (admin login: `admin` / `test1234`).
 
 ---
 
-## 7. Troubleshooting
+## 8. Troubleshooting
 
 | Problem | Check |
 |---|---|
 | Site does not load | Security group allows HTTP 80; `sudo systemctl status httpd` |
-| "Cannot reach the server" in the gallery | `sudo systemctl status globeframe` and `sudo journalctl -u globeframe -n 50` |
+| "Cannot reach the server" | `sudo systemctl status globeframe` and `sudo journalctl -u globeframe -n 50` |
 | "AWS access denied" when uploading | The IAM role is not attached, or it lacks the S3 permissions |
-| Forgot the admin password | `sudo rm /etc/globeframe.env && sudo bash deploy/setup.sh` (photos are kept) |
-| Site address changed | The public IP changes after a stop/start. Check it on the instance Details tab. |
+| Photos broken after switching to `cloudfront` | Behavior `/photos/*` and the OAC bucket policy in CloudFront |
+| Admin login does nothing after enabling `COOKIE_SECURE=1` | Open the site through the `https://…cloudfront.net` address, not the EC2 IP |
+| Forgot the admin password | `sudo rm /etc/globeframe.env && sudo bash deploy/setup.sh` (photos are kept; set IMAGE_MODE again afterwards) |
+| Site address changed | The public IP changes after a stop/start. Check the instance Details tab. |
 
-## 8. Security notes
+## 9. Security notes
 - The admin password is stored only as a hash in `/etc/globeframe.env` (readable by root only).
-- The backend listens only on `127.0.0.1`, so it is not reachable directly from the internet.
-- Login is limited to 5 failed attempts per 5 minutes per address. Admin actions need a session cookie and a custom request header.
+- The backend listens only on `127.0.0.1`, so it cannot be reached directly from the internet.
+- Login is limited to 5 failed attempts per 5 minutes. Admin actions need a session cookie and a custom request header.
 - Uploads are checked for real image content and limited to 10 MB.
-- No AWS access keys are used: the backend gets S3 access from the EC2 IAM role.
-- The site uses HTTP for now. Once served over HTTPS (for example through CloudFront), set `COOKIE_SECURE=1` in `/etc/globeframe.env`.
+- No AWS access keys are stored: the backend gets S3 access from the EC2 IAM role, and the bucket stays private.

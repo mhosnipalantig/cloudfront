@@ -73,7 +73,7 @@ SECRET_KEY=$SECRET
 #   s3         = in the S3 bucket via pre-signed links (needs the IAM role on the instance)
 #   cloudfront = in the S3 bucket, delivered by CloudFront (needs the IAM role + CLOUDFRONT_DOMAIN)
 IMAGE_MODE=local
-S3_BUCKET=globeframe-photos-2026
+S3_BUCKET=group-2-ttuu-cdn-demo-2026
 AWS_REGION=ap-northeast-1
 CLOUDFRONT_DOMAIN=
 
