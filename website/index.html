@@ -5,13 +5,42 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GlobeFrame – Global Photo Gallery</title>
   <meta name="description" content="GlobeFrame: a global photo gallery and portfolio website hosted on AWS.">
+  <meta name="theme-color" content="#0a0a0a">
   <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <!-- SVG icon sprite (Lucide-style, stroke icons) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r="1"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2L5.8 21 7 14.2 2 9.3l6.9-1z"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.7-9h1.8a4.5 4.5 0 1 1 0 9z"/></symbol>
+    <symbol id="i-server" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><path d="M6 6h.01M6 18h.01"/></symbol>
+    <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+  </svg>
+
+  <a class="skip-link" href="#gallery">Skip to gallery</a>
+
   <header class="site-header">
-    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">◎</span> GlobeFrame</a>
-    <nav>
+    <a class="brand" href="index.html">
+      <svg class="icon brand-mark" aria-hidden="true"><use href="#i-globe"/></svg>
+      <span>GlobeFrame</span>
+    </a>
+    <nav aria-label="Main">
       <a href="#gallery">Gallery</a>
       <a href="#about">About</a>
       <a href="admin.html" class="nav-admin">Admin</a>
@@ -20,55 +49,90 @@
 
   <section class="hero">
     <p class="eyebrow">Global Photo Gallery &amp; Portfolio</p>
-    <h1>Moments from around the world,<br>delivered close to you.</h1>
+    <h1>Moments from around the world, <span class="dim">delivered close to you.</span></h1>
     <p class="lede">GlobeFrame showcases photographs and creative works from photographers, artists and students.
-      Browse by category or search by title, location or category. Images are stored in the AWS cloud and delivered
-      from the Tokyo Region.</p>
+      Browse by category or search by title, location or category.</p>
+    <dl class="hero-stats" aria-live="polite">
+      <div><dt>Photos</dt><dd id="hs-photos">–</dd></div>
+      <div><dt>Categories</dt><dd id="hs-cats">–</dd></div>
+      <div><dt>Region</dt><dd id="hs-region">Tokyo</dd></div>
+    </dl>
   </section>
 
-  <section id="featured-section" class="featured" hidden>
-    <h2 class="section-title">Featured</h2>
+  <section id="featured-section" class="featured" hidden aria-labelledby="featured-title">
+    <div class="section-head">
+      <h2 id="featured-title" class="section-title">Featured</h2>
+      <p class="muted small">Hand-picked by the curators</p>
+    </div>
     <div id="featured" class="featured-row"></div>
   </section>
 
-  <main id="gallery" class="gallery-section">
-    <div class="gallery-head">
-      <h2 class="section-title">Gallery</h2>
-      <label class="search">
-        <span class="visually-hidden">Search photos</span>
-        <input id="search" type="search" placeholder="Search by title, location or category…" autocomplete="off">
-      </label>
+  <main id="gallery" class="gallery-section" tabindex="-1">
+    <div class="toolbar">
+      <div class="toolbar-inner">
+        <h2 class="section-title">Gallery</h2>
+        <label class="search">
+          <span class="visually-hidden">Search photos</span>
+          <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+          <input id="search" type="search" placeholder="Search title, location or category" autocomplete="off">
+        </label>
+      </div>
+      <div id="filters" class="filters" role="tablist" aria-label="Categories"></div>
     </div>
-    <div id="filters" class="filters" role="tablist" aria-label="Categories"></div>
     <div id="status" class="status" role="status">Loading photos…</div>
-    <div id="grid" class="grid"></div>
+    <div id="grid" class="grid" aria-busy="true">
+      <div class="skeleton" style="height:280px"></div><div class="skeleton" style="height:360px"></div>
+      <div class="skeleton" style="height:220px"></div><div class="skeleton" style="height:320px"></div>
+      <div class="skeleton" style="height:300px"></div><div class="skeleton" style="height:240px"></div>
+      <div class="skeleton" style="height:340px"></div><div class="skeleton" style="height:260px"></div>
+    </div>
   </main>
 
-  <section id="about" class="about">
-    <h2 class="section-title">About this project</h2>
-    <div class="about-grid">
-      <div><h3>Amazon CloudFront</h3><p>Delivers the website and images from edge locations closer to visitors.</p></div>
-      <div><h3>Amazon EC2</h3><p>Runs the web server (Apache) and the admin backend.</p></div>
-      <div><h3>Amazon S3</h3><p>Stores the photographs in a private bucket.</p></div>
-      <div><h3>AWS IAM</h3><p>Controls who and what can access each resource.</p></div>
+  <section id="about" class="about" aria-labelledby="about-title">
+    <div class="section-head">
+      <h2 id="about-title" class="section-title">How it works</h2>
+      <p class="muted small" id="mode-badge"></p>
     </div>
-    <p class="muted small">ITE183 – From Concepts to Cloud: An AWS Application Project · Cloud Data Center / CDN · <span id="mode-badge"></span></p>
+
+    <ol class="flow" aria-label="Request path">
+      <li><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg><span>Visitor</span></li>
+      <li class="flow-arrow" aria-hidden="true"><svg class="icon"><use href="#i-arrow-right"/></svg></li>
+      <li><svg class="icon" aria-hidden="true"><use href="#i-cloud"/></svg><span>CloudFront edge</span></li>
+      <li class="flow-arrow" aria-hidden="true"><svg class="icon"><use href="#i-arrow-right"/></svg></li>
+      <li class="flow-split">
+        <span><svg class="icon" aria-hidden="true"><use href="#i-server"/></svg>EC2 · pages &amp; API</span>
+        <span><svg class="icon" aria-hidden="true"><use href="#i-database"/></svg>S3 · photos</span>
+      </li>
+    </ol>
+
+    <div class="about-grid">
+      <article><svg class="icon" aria-hidden="true"><use href="#i-cloud"/></svg><h3>Amazon CloudFront</h3><p>Delivers the website and images from edge locations closer to visitors.</p></article>
+      <article><svg class="icon" aria-hidden="true"><use href="#i-server"/></svg><h3>Amazon EC2</h3><p>Runs the web server (Apache) and the admin backend.</p></article>
+      <article><svg class="icon" aria-hidden="true"><use href="#i-database"/></svg><h3>Amazon S3</h3><p>Stores the photographs in a private bucket.</p></article>
+      <article><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg><h3>AWS IAM</h3><p>Controls who and what can access each resource.</p></article>
+    </div>
   </section>
 
-  <footer class="site-footer">© 2026 GlobeFrame · Macatanong · Maguidala · Palantig</footer>
+  <footer class="site-footer">
+    <span>© 2026 GlobeFrame · Macatanong · Maguidala · Palantig</span>
+    <span>ITE183 – From Concepts to Cloud: An AWS Application Project</span>
+  </footer>
 
-  <div id="lightbox" class="lightbox" hidden role="dialog" aria-modal="true" aria-label="Photo details">
-    <button class="lb-close" aria-label="Close">×</button>
-    <button class="lb-nav lb-prev" aria-label="Previous photo">‹</button>
+  <div id="lightbox" class="lightbox" hidden role="dialog" aria-modal="true" aria-labelledby="lb-title">
+    <div class="lb-top">
+      <span id="lb-count" class="lb-count"></span>
+      <button class="icon-btn lb-close" aria-label="Close"><svg class="icon"><use href="#i-x"/></svg></button>
+    </div>
+    <button class="icon-btn lb-nav lb-prev" aria-label="Previous photo"><svg class="icon"><use href="#i-left"/></svg></button>
     <figure>
       <img id="lb-img" alt="">
       <figcaption>
         <h3 id="lb-title"></h3>
-        <p id="lb-meta" class="muted"></p>
+        <p id="lb-meta" class="meta"></p>
         <p id="lb-desc"></p>
       </figcaption>
     </figure>
-    <button class="lb-nav lb-next" aria-label="Next photo">›</button>
+    <button class="icon-btn lb-nav lb-next" aria-label="Next photo"><svg class="icon"><use href="#i-right"/></svg></button>
   </div>
 
   <script src="js/config.js"></script>

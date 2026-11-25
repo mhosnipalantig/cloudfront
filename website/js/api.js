@@ -57,6 +57,23 @@ function el(tag, attrs = {}, ...children) {
   return node;
 }
 
+// SVG icon from the page's <symbol id="i-NAME"> sprite.
+function icon(name, cls = "icon") {
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("class", cls);
+  svg.setAttribute("aria-hidden", "true");
+  const use = document.createElementNS(ns, "use");
+  use.setAttribute("href", `#i-${name}`);
+  svg.append(use);
+  return svg;
+}
+
+// Icon + text pair, e.g. meta("pin", "Kyoto, Japan").
+function meta(name, text) {
+  return text ? el("span", {}, icon(name), document.createTextNode(text)) : null;
+}
+
 // Case-insensitive search across title, location, category and description.
 function photoMatches(p, q) {
   if (!q) return true;

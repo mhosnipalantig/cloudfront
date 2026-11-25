@@ -5,35 +5,66 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GlobeFrame – Admin Dashboard</title>
   <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#0a0a0a">
   <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="admin">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r="1"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2L5.8 21 7 14.2 2 9.3l6.9-1z"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></symbol>
+    <symbol id="i-drive" viewBox="0 0 24 24"><path d="M22 12H2"/><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/><path d="M6 16h.01M10 16h.01"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M21.2 6.8a2.8 2.8 0 0 0-4-4L3.8 16.2a2 2 0 0 0-.5.8l-1.3 4.4a.5.5 0 0 0 .6.6l4.4-1.3a2 2 0 0 0 .8-.5z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+  </svg>
+
   <header class="site-header">
-    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">◎</span> GlobeFrame <span class="tag">Admin</span></a>
-    <nav>
-      <span id="dash-nav" hidden>
-        <a href="#dashboard">Dashboard</a>
-        <a href="#upload">Upload</a>
-        <a href="#photos">Photos</a>
-        <a href="#categories">Categories</a>
-      </span>
-      <a href="index.html">View gallery</a>
-      <button id="logout" class="btn btn-ghost btn-small" hidden>Log out</button>
+    <a class="brand" href="index.html">
+      <svg class="icon brand-mark" aria-hidden="true"><use href="#i-globe"/></svg>
+      <span>GlobeFrame</span> <span class="tag">Admin</span>
+    </a>
+    <nav aria-label="Admin">
+      <a href="index.html" class="nav-link-icon"><svg class="icon" aria-hidden="true"><use href="#i-external"/></svg><span>View gallery</span></a>
+      <button id="logout" class="btn btn-ghost btn-small" hidden><svg class="icon" aria-hidden="true"><use href="#i-logout"/></svg>Log out</button>
     </nav>
   </header>
 
   <!-- Login -->
-  <section id="login-view" class="panel narrow" hidden>
-    <h1>Administrator login</h1>
-    <p class="muted">Sign in to manage the GlobeFrame gallery.</p>
-    <form id="login-form" class="form">
-      <label>Username <input name="username" autocomplete="username" required></label>
-      <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
-      <button class="btn" type="submit">Log in</button>
-      <p id="login-error" class="error" role="alert"></p>
-    </form>
+  <section id="login-view" class="login" hidden>
+    <div class="login-card">
+      <span class="login-icon"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg></span>
+      <h1>Administrator login</h1>
+      <p class="muted">Sign in to manage the GlobeFrame gallery.</p>
+      <form id="login-form" class="form">
+        <label>Username <input name="username" autocomplete="username" required></label>
+        <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
+        <button class="btn btn-block" type="submit">Log in</button>
+        <p id="login-error" class="error" role="alert"></p>
+      </form>
+    </div>
   </section>
+
+  <div id="dash-nav" class="tabbar" hidden>
+    <nav aria-label="Dashboard sections">
+      <a href="#dashboard">Dashboard</a>
+      <a href="#upload">Upload</a>
+      <a href="#photos">Photos</a>
+      <a href="#categories">Categories</a>
+    </nav>
+  </div>
 
   <main id="dash-view" hidden>
     <!-- Dashboard statistics -->
@@ -43,22 +74,22 @@
         <span id="mode" class="tag"></span>
       </div>
       <div class="stats">
-        <div class="stat"><span class="stat-num" id="st-photos">0</span><span class="stat-label">Total photos</span></div>
-        <div class="stat"><span class="stat-num" id="st-cats">0</span><span class="stat-label">Categories</span></div>
-        <div class="stat"><span class="stat-num" id="st-feat">0</span><span class="stat-label">Featured</span></div>
-        <div class="stat"><span class="stat-num" id="st-size">0 MB</span><span class="stat-label">Storage used</span></div>
+        <div class="stat"><svg class="icon" aria-hidden="true"><use href="#i-image"/></svg><span class="stat-num" id="st-photos">0</span><span class="stat-label">Total photos</span></div>
+        <div class="stat"><svg class="icon" aria-hidden="true"><use href="#i-folder"/></svg><span class="stat-num" id="st-cats">0</span><span class="stat-label">Categories</span></div>
+        <div class="stat"><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg><span class="stat-num" id="st-feat">0</span><span class="stat-label">Featured</span></div>
+        <div class="stat"><svg class="icon" aria-hidden="true"><use href="#i-drive"/></svg><span class="stat-num" id="st-size">0 MB</span><span class="stat-label">Storage used</span></div>
       </div>
       <div class="stats-detail">
-        <div>
+        <div class="subpanel">
           <h2 class="sub">Photos per category</h2>
           <div id="st-bars" class="bars"></div>
         </div>
-        <div>
+        <div class="subpanel">
           <h2 class="sub">Gallery details</h2>
           <dl class="facts">
             <dt>Latest upload</dt><dd id="st-latest">–</dd>
-            <dt>Photos with location</dt><dd id="st-loc">–</dd>
-            <dt>Storage location</dt><dd id="st-where">–</dd>
+            <dt>With location</dt><dd id="st-loc">–</dd>
+            <dt>Storage</dt><dd id="st-where">–</dd>
           </dl>
         </div>
       </div>
@@ -66,17 +97,23 @@
 
     <!-- Upload -->
     <section id="upload" class="panel">
-      <h1>Upload a photo</h1>
+      <div class="panel-head"><h1>Upload a photo</h1></div>
       <form id="upload-form" class="form form-grid">
-        <label class="span-2">Image file (JPG, PNG, GIF, WEBP – max 10 MB)
+        <label class="dropzone span-2" id="dropzone">
           <input name="file" type="file" accept="image/jpeg,image/png,image/gif,image/webp" required>
+          <img id="drop-preview" alt="" hidden>
+          <span class="drop-text">
+            <svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg>
+            <strong id="drop-name">Drop an image here or click to browse</strong>
+            <span class="muted small">JPG, PNG, GIF or WEBP · max 10 MB</span>
+          </span>
         </label>
         <label>Title <input name="title" maxlength="120" placeholder="e.g. Sunrise over Mount Fuji" required></label>
-        <label>Location <input name="location" maxlength="120" placeholder="e.g. Shizuoka, Japan"></label>
+        <label><span>Location <span class="opt">optional</span></span><input name="location" maxlength="120" placeholder="e.g. Shizuoka, Japan"></label>
         <label>Category <select name="category" class="cat-select" required></select></label>
         <label class="check self-end"><input name="featured" type="checkbox"> Feature on the home page</label>
-        <label class="span-2">Description <textarea name="description" rows="2" maxlength="1000" placeholder="What is the story behind this photo?"></textarea></label>
-        <div class="actions"><button class="btn" type="submit">Upload</button> <span id="upload-msg" class="muted" role="status"></span></div>
+        <label class="span-2"><span>Description <span class="opt">optional</span></span><textarea name="description" rows="3" maxlength="1000" placeholder="What is the story behind this photo?"></textarea></label>
+        <div class="actions"><button class="btn" type="submit"><svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg>Upload photo</button> <span id="upload-msg" class="msg" role="status"></span></div>
       </form>
     </section>
 
@@ -84,7 +121,11 @@
     <section id="photos" class="panel">
       <div class="panel-head">
         <h1>Manage photos <span id="count" class="muted"></span></h1>
-        <input id="admin-search" class="search-input" type="search" placeholder="Search photos…" aria-label="Search photos">
+        <label class="search">
+          <span class="visually-hidden">Search photos</span>
+          <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+          <input id="admin-search" type="search" placeholder="Search photos">
+        </label>
       </div>
       <div id="admin-status" class="status" role="status"></div>
       <div id="admin-list" class="admin-list"></div>
@@ -92,20 +133,20 @@
 
     <!-- Manage categories -->
     <section id="categories" class="panel">
-      <h1>Manage categories</h1>
+      <div class="panel-head"><h1>Manage categories</h1></div>
       <form id="cat-form" class="inline-form">
         <input name="name" maxlength="60" placeholder="New category name, e.g. Street" required aria-label="New category name">
-        <button class="btn" type="submit">Add category</button>
+        <button class="btn" type="submit"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Add category</button>
       </form>
-      <p id="cat-msg" class="muted small" role="status"></p>
+      <p id="cat-msg" class="msg small" role="status"></p>
       <div id="cat-list" class="cat-list"></div>
     </section>
   </main>
 
   <!-- Edit photo dialog -->
-  <dialog id="edit-dialog">
+  <dialog id="edit-dialog" aria-labelledby="edit-title">
     <form id="edit-form" class="form" method="dialog">
-      <h2>Edit photo</h2>
+      <h2 id="edit-title">Edit photo</h2>
       <label>Title <input name="title" maxlength="120" required></label>
       <label>Location <input name="location" maxlength="120"></label>
       <label>Category <select name="category" class="cat-select" required></select></label>
@@ -119,9 +160,9 @@
   </dialog>
 
   <!-- Rename category dialog -->
-  <dialog id="cat-dialog">
+  <dialog id="cat-dialog" aria-labelledby="cat-title">
     <form id="cat-edit-form" class="form" method="dialog">
-      <h2>Rename category</h2>
+      <h2 id="cat-title">Rename category</h2>
       <label>New name <input name="name" maxlength="60" required></label>
       <p class="muted small">Photos in this category will move to the new name.</p>
       <div class="actions">

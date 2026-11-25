@@ -13,17 +13,42 @@
 
   function showLogin() { loginView.hidden = false; dashView.hidden = true; logoutBtn.hidden = true; dashNav.hidden = true; }
   function showDash() { loginView.hidden = true; dashView.hidden = false; logoutBtn.hidden = false; dashNav.hidden = false; refresh(); }
-  function fail(e, target = statusEl) { if (e.status === 401) showLogin(); else target.textContent = e.message; }
+
+  // Status messages: kind is "ok", "err" or "" (neutral).
+  function say(target, text, kind = "") {
+    target.textContent = text;
+    target.classList.remove("ok", "err");
+    if (kind) target.classList.add(kind);
+  }
+  function fail(e, target = statusEl) { if (e.status === 401) showLogin(); else say(target, e.message, "err"); }
 
   // ---- login / logout
   $("login-form").addEventListener("submit", async e => {
     e.preventDefault();
-    const f = e.target;
+    const f = e.target, btn = f.querySelector("button[type=submit]");
     $("login-error").textContent = "";
+    btn.disabled = true;
     try { await API.login(f.username.value.trim(), f.password.value); f.reset(); showDash(); }
     catch (err) { $("login-error").textContent = err.message; }
+    finally { btn.disabled = false; }
   });
   logoutBtn.addEventListener("click", async () => { await API.logout().catch(() => {}); showLogin(); });
+
+  // ---- section tabs: highlight the section in view
+  const tabs = [...dashNav.querySelectorAll("a")];
+  if ("IntersectionObserver" in window) {
+    const spy = new IntersectionObserver(entries => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        tabs.forEach(t => {
+          const on = t.getAttribute("href") === `#${e.target.id}`;
+          t.classList.toggle("current", on);
+          if (on) t.setAttribute("aria-current", "true"); else t.removeAttribute("aria-current");
+        });
+      }
+    }, { rootMargin: "-30% 0px -60% 0px" });
+    document.querySelectorAll("#dash-view > section").forEach(s => spy.observe(s));
+  }
 
   // ---- load everything
   async function refresh() {
@@ -48,7 +73,7 @@
     $("mode").textContent = MODE[s.image_mode];
     const max = Math.max(1, ...s.per_category.map(c => c.count));
     $("st-bars").replaceChildren(...s.per_category.map(c => el("div", { class: "bar-row" },
-      el("span", { class: "bar-label", text: c.name }),
+      el("span", { class: "bar-label", text: c.name, title: c.name }),
       el("span", { class: "bar-track" }, el("span", { class: "bar-fill", style: `width:${(c.count / max) * 100}%` })),
       el("span", { class: "bar-num", text: String(c.count) }))));
   }
@@ -68,33 +93,57 @@
   function renderPhotos() {
     const shown = photos.filter(p => photoMatches(p, query));
     $("count").textContent = `(${photos.length})`;
-    statusEl.textContent = !photos.length ? "No photos yet. Upload your first photo above."
-      : !shown.length ? `No photos match "${query}".` : "";
+    say(statusEl, !photos.length ? "No photos yet. Upload your first photo above."
+      : !shown.length ? `No photos match "${query}".` : "");
     list.replaceChildren(...shown.map(p => el("article", { class: "admin-item" },
-      el("img", { src: p.url, alt: p.title, loading: "lazy" }),
+      el("div", { class: "admin-thumb" },
+        el("img", { src: p.url, alt: p.title, loading: "lazy", decoding: "async" }),
+        p.featured ? el("span", { class: "badge-feat" }, icon("star"), document.createTextNode("Featured")) : null),
       el("div", { class: "admin-info" },
-        el("strong", { text: p.title }),
-        el("span", { class: "muted small", text: [p.location ? `📍 ${p.location}` : null, p.category, p.featured ? "★ Featured" : null].filter(Boolean).join(" · ") }),
+        el("strong", { text: p.title, title: p.title }),
+        el("span", { class: "meta" }, ...[meta("pin", p.location), meta("tag", p.category)].filter(Boolean)),
         p.description ? el("span", { class: "small clamp", text: p.description }) : null),
       el("div", { class: "admin-actions" },
-        el("button", { class: "btn btn-small btn-ghost", text: p.featured ? "Unfeature" : "Feature", onclick: () => toggleFeature(p) }),
-        el("button", { class: "btn btn-small btn-ghost", text: "Edit", onclick: () => openEdit(p) }),
-        el("button", { class: "btn btn-small btn-danger", text: "Delete", onclick: () => removePhoto(p) })))));
+        el("button", { class: "btn btn-small btn-ghost", onclick: () => toggleFeature(p),
+                       "aria-label": `${p.featured ? "Unfeature" : "Feature"} ${p.title}` },
+          icon("star"), document.createTextNode(p.featured ? "Unfeature" : "Feature")),
+        el("button", { class: "btn btn-small btn-ghost", onclick: () => openEdit(p), "aria-label": `Edit ${p.title}` },
+          icon("pencil"), document.createTextNode("Edit")),
+        el("button", { class: "btn btn-small btn-danger btn-icon", onclick: () => removePhoto(p),
+                       "aria-label": `Delete ${p.title}`, title: "Delete" }, icon("trash"))))));
   }
 
-  $("upload-form").addEventListener("submit", async e => {
+  // ---- upload: drag-and-drop zone with preview
+  const uploadForm = $("upload-form"), drop = $("dropzone"), preview = $("drop-preview"), dropName = $("drop-name");
+  const DROP_HINT = dropName.textContent;
+  let previewUrl = null;
+
+  function updatePreview() {
+    const file = uploadForm.file.files[0];
+    if (previewUrl) { URL.revokeObjectURL(previewUrl); previewUrl = null; }
+    if (!file) { preview.hidden = true; dropName.textContent = DROP_HINT; return; }
+    previewUrl = URL.createObjectURL(file);
+    preview.src = previewUrl; preview.hidden = false;
+    dropName.textContent = `${file.name} · ${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+    if (!uploadForm.title.value) uploadForm.title.value = file.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").slice(0, 120);
+  }
+  uploadForm.file.addEventListener("change", updatePreview);
+  ["dragenter", "dragover"].forEach(t => drop.addEventListener(t, () => drop.classList.add("over")));
+  ["dragleave", "drop"].forEach(t => drop.addEventListener(t, () => drop.classList.remove("over")));
+
+  uploadForm.addEventListener("submit", async e => {
     e.preventDefault();
     const f = e.target, msg = $("upload-msg"), btn = f.querySelector("button[type=submit]");
     const file = f.file.files[0];
-    if (file && file.size > 10 * 1024 * 1024) { msg.textContent = "File is larger than 10 MB."; return; }
+    if (file && file.size > 10 * 1024 * 1024) { say(msg, "File is larger than 10 MB.", "err"); return; }
     const data = new FormData(f);
     data.set("featured", f.featured.checked ? "true" : "false");
-    btn.disabled = true; msg.textContent = "Uploading…";
+    btn.disabled = true; say(msg, "Uploading…");
     try {
       await API.upload(data);
       const cat = f.category.value;
-      f.reset(); f.category.value = cat;
-      msg.textContent = "Uploaded ✓";
+      f.reset(); f.category.value = cat; updatePreview();
+      say(msg, "Photo uploaded.", "ok");
       refresh();
     } catch (err) { fail(err, msg); }
     finally { btn.disabled = false; }
@@ -135,17 +184,20 @@
   // ---- categories
   function renderCategories() {
     $("cat-list").replaceChildren(...categories.map(c => el("div", { class: "cat-item" },
-      el("span", { class: "cat-name", text: c.name }),
+      icon("folder"),
+      el("span", { class: "cat-name", text: c.name, title: c.name }),
       el("span", { class: "muted small", text: `${c.count} photo${c.count === 1 ? "" : "s"}` }),
       el("span", { class: "admin-actions" },
-        el("button", { class: "btn btn-small btn-ghost", text: "Rename", onclick: () => openRename(c) }),
-        el("button", { class: "btn btn-small btn-danger", text: "Delete", onclick: () => removeCategory(c) })))));
+        el("button", { class: "btn btn-small btn-ghost", onclick: () => openRename(c), "aria-label": `Rename ${c.name}` },
+          icon("pencil"), document.createTextNode("Rename")),
+        el("button", { class: "btn btn-small btn-danger", onclick: () => removeCategory(c), "aria-label": `Delete ${c.name}` },
+          icon("trash"), document.createTextNode("Delete"))))));
   }
 
   $("cat-form").addEventListener("submit", async e => {
     e.preventDefault();
     const f = e.target, msg = $("cat-msg");
-    try { await API.addCategory(f.name.value); msg.textContent = `Added "${f.name.value.trim()}" ✓`; f.reset(); refresh(); }
+    try { await API.addCategory(f.name.value); say(msg, `Added "${f.name.value.trim()}".`, "ok"); f.reset(); refresh(); }
     catch (err) { fail(err, msg); }
   });
 
@@ -154,14 +206,14 @@
   catDialog.addEventListener("close", async () => {
     if (catDialog.returnValue !== "save" || !renaming) { renaming = null; return; }
     const old = renaming.name; renaming = null;
-    try { await API.renameCategory(old, catEditForm.name.value); $("cat-msg").textContent = "Category renamed ✓"; refresh(); }
+    try { await API.renameCategory(old, catEditForm.name.value); say($("cat-msg"), "Category renamed.", "ok"); refresh(); }
     catch (e) { fail(e, $("cat-msg")); }
   });
 
   async function removeCategory(c) {
     const note = c.count ? ` Its ${c.count} photo${c.count === 1 ? "" : "s"} will move to "Uncategorized".` : "";
     if (!confirm(`Delete the category "${c.name}"?${note}`)) return;
-    try { await API.deleteCategory(c.name); $("cat-msg").textContent = `Deleted "${c.name}" ✓`; refresh(); }
+    try { await API.deleteCategory(c.name); say($("cat-msg"), `Deleted "${c.name}".`, "ok"); refresh(); }
     catch (e) { fail(e, $("cat-msg")); }
   }
 
